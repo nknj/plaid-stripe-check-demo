@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <h1><%= title %></h1>
+  </body>
+  <button id="link-button">Link Bank Account to Check and Stripe</button>
+  <p id="result"></p>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+  <script>
+    (async function() {
+      const configs = {
+        token: (await $.post('/create_link_token')).link_token,
+        onSuccess: function(public_token, metadata) {
+          $.post('/get_processor_tokens', {
+            public_token: public_token,
+            account_id: metadata.accounts[0].id
+          }, function(data, status) {
+            $('p#result').html("\nPlaid access token: " + data.plaid + "\nStripe bank account token: " + data.stripe + "\nCheck processor token: " + data.check).wrap('<pre />');;
+          }, 'json')
+        }
+      };
+      var linkHandler = Plaid.create(configs);
+      document.getElementById('link-button').onclick = function() {
+        linkHandler.open();
+      };
+    })();
+  </script>
+</html>
